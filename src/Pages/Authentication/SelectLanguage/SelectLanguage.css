@@ -1,0 +1,36 @@
+
+
+
+.select-language-wrapper{
+    height: 100vh;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+   font-family: "Onest";
+
+}
+.select-language-container{
+    max-width: 500px;
+    /* background-color: blue; */
+    height: 500px;
+}
+.language-card{
+    max-width: 160px;
+    height: 160px;
+    background-color:  #EA6D35;
+    border-radius: 16px
+    ;
+}
+.select-description{
+    font-size: 20px;
+    color:  #667085;
+    font-weight: 500;
+}
+.select-language-title{
+    font-size: 36px;
+    font-weight: 600;
+}
+.card-title{
+    font-size: 72px;
+    font-weight: 500;
+    
+}

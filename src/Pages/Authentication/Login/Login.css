@@ -1,0 +1,18 @@
+
+.login-form-label{
+    font-size: 14px;
+    font-weight: 500;
+    color: #344054;
+    margin-bottom: 5px;
+}
+.login-forgot-password{
+    font-size:14px ;
+    font-weight:600 ;
+    color: #024FAA;
+}
+.login-form-text{
+    font-size: 14px;
+    font-weight: 400;
+    color:  #667085;
+    ;
+}
