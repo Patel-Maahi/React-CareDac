@@ -48,13 +48,14 @@ const Profile = () => {
   const [modalValue, setModalValue] = useState();
   const [openServiceNeeded, setOpenServiceNeeded] = useState(false);
   const [openViewMemberDetails, setOpenViewMemberDetails] = useState(false);
-  const [profileImg, setProfileImg] = useState(ProfileImg2);
+  // const [profileImg, setProfileImg] = useState(ProfileImg2);
   const [profileData, setProfileData] = useState();
   const [conditionList, setConditionList] = useState([]);
   const [specialNeedsList, setSpecialNeedsList] = useState([]);
   const [servicesList, setServicesList] = useState([]);
   const [members, setMembers] = useState([]);
   const [memberData, setMemberData] = useState([]);
+  const [editMember, setEditMember] = useState(false);
   const [openFormValue, setOpenFormValue] = useState(true);
 
   const handleOpenEditProfile = () => {
@@ -104,7 +105,7 @@ const Profile = () => {
   useEffect(() => {
     viewProfile().then((res) => {
       setProfileData(res.data);
-      setProfileImg(res.data.profile_image);
+      // setProfileImg(res.data.profile_image);
     });
     getCondition().then((res) => {
       const conditionData = res.data;
@@ -132,6 +133,12 @@ const Profile = () => {
   const handleAddMember = () => {
     setOpenFormValue(false);
     setOpenEditProfile(true);
+    setEditMember(false);
+  };
+  const handleEditMember = () => {
+    setOpenFormValue(false);
+    setOpenEditProfile(true);
+    setEditMember(true);
   };
   return (
     <>
@@ -162,7 +169,7 @@ const Profile = () => {
               <Box>
                 <CardMedia
                   component={"img"}
-                  image={`${imgUrl}${profileImg}`}
+                  image={`${imgUrl}${profileData?.profile_image}`}
                   sx={{
                     width: "150px",
                     height: "150px",
@@ -630,6 +637,8 @@ const Profile = () => {
               viewProfile={viewProfile}
               openFormValue={openFormValue}
               addNewMember={handleGetAllMembers}
+              editMember={editMember}
+              memberData={memberData}
             />
           </Box>
         </Modal>
@@ -677,7 +686,7 @@ const Profile = () => {
             <ViewMemberDetails
               closeViewMemberDetails={handleCloseViewMemberDetails}
               memberData={memberData}
-              editMember={handleAddMember}
+              editMember={handleEditMember}
               getAllMembers={handleGetAllMembers}
             />
           </Box>

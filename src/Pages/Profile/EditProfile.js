@@ -30,7 +30,11 @@ import {
   viewProfile,
 } from "../../api/Services/patient/profile";
 import { Country, State, City } from "country-state-city";
-import { addMember, getMember } from "../../api/Services/patient/member";
+import {
+  addMember,
+  getMember,
+  updateMember,
+} from "../../api/Services/patient/member";
 import profileNotFound from "../../Assets/Images/profile-blank.jpg";
 
 const EditProfile = ({
@@ -39,15 +43,18 @@ const EditProfile = ({
   viewProfile,
   openFormValue,
   addNewMember,
+  editMember,
+  memberData,
 }) => {
   const imgUrl = "https://caredac-web.s3.ap-southeast-2.amazonaws.com";
   const [countries, setCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [states, setStates] = useState([]);
   const [selectedState, setSelectedState] = useState(null);
-
   const [cities, setCities] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
+  // const [uploadImage, setUploadImage] = useState();
+  const [base64Img, setBase64Img] = useState("");
   const [values, setValues] = useState({
     fullName: "",
     email: "",
@@ -97,25 +104,39 @@ const EditProfile = ({
   } = useForm({
     // resolver: yupResolver(schema),
   });
-  const [base64Image, setBase64Image] = useState("");
   useEffect(() => {
-    console.log(openFormValue);
-    if (openFormValue === true) {
-      setValues({
-        fullName: profileData?.full_name,
-        email: profileData?.email,
-        dateOfBirth: profileData?.dob,
-        phoneNo: profileData?.mobile_number,
-        emergencyPhoneNo: profileData?.emergency_mobile_number,
-        gender: profileData?.gender,
-        address1: profileData?.address1,
-        address2: profileData?.address2,
-        country: profileData?.country,
-        state: profileData?.state,
-        city: profileData?.city,
-        pincode: profileData?.pin_code,
-        profileImage: profileData?.profile_image,
-      });
+    if (openFormValue === true || editMember === true) {
+      if (openFormValue === true) {
+        setValues({
+          fullName: profileData?.full_name,
+          email: profileData?.email,
+          dateOfBirth: profileData?.dob,
+          phoneNo: profileData?.mobile_number,
+          emergencyPhoneNo: profileData?.emergency_mobile_number,
+          gender: profileData?.gender,
+          address1: profileData?.address1,
+          address2: profileData?.address2,
+          country: profileData?.country,
+          state: profileData?.state,
+          city: profileData?.city,
+          pincode: profileData?.pin_code,
+          profileImage: imgUrl + profileData?.profile_image,
+        });
+      } else {
+        setValues({
+          fullName: memberData?.full_name,
+          email: memberData?.email,
+          dateOfBirth: memberData?.dob,
+          phoneNo: memberData?.mobile_number,
+          gender: memberData?.gender,
+          address1: memberData?.address1,
+          address2: memberData?.address2,
+          country: memberData?.country,
+          state: memberData?.state,
+          city: memberData?.city,
+          pincode: memberData?.pin_code,
+        });
+      }
     }
   }, []);
   useEffect(() => {
@@ -125,49 +146,41 @@ const EditProfile = ({
       setCountries(countryArray);
     });
   }, []);
-  console.log(profileData.profile_image);
-  console.log(values.profileImage);
 
-  // const [uploadImage, setUploadImage] = useState();
-  // const fileInputRef = useRef(null);
-  // const handleFileSelect = (event) => {
-  //   event.preventDefault();
-  //   const selectedFile = event.target.files[0];
-  //   console.log(selectedFile);
-  //   const reader = new FileReader();
-  //   reader.readAsDataURL(selectedFile);
-  //   reader.onload = () => {
-  //     setUploadImage(reader.result);
-  //     console.log(uploadImage);
-  //   };
-  //   fileInputRef.current.value = null;
-  // };
-
+  const fileInputRef = useRef(null);
+  const handleFileSelect = (event) => {
+    event.preventDefault();
+    const selectedFile = event.target.files[0];
+    console.log(selectedFile);
+    setValues({ ...values, profileImage: URL.createObjectURL(selectedFile) });
+    const reader = new FileReader();
+    reader.readAsDataURL(selectedFile);
+    reader.onload = () => {
+      setBase64Img(reader.result);
+    };
+    fileInputRef.current.value = null;
+  };
+  // console.log(uploadImage);
+  console.log(base64Img);
   const handleSelectCountries = (e) => {
-    console.log(e.target.value);
     const country = e.target.value;
     setSelectedCountry(country);
     setValues({ ...values, country: country });
     getState(country).then((response) => {
-      console.log(response.data.states);
       const responseData = response.data.states;
       const stateArray = responseData.map((item) => item.name);
       setStates(stateArray);
     });
   };
   const handleSelectState = (e) => {
-    console.log(e.target.value);
     const state = e.target.value;
     setSelectedState(state);
     setValues({ ...values, state: state });
     getCity(selectedCountry, state).then((res) => {
-      console.log(res.data);
       setCities(res.data);
     });
   };
   const handleSelectCity = (e) => {
-    console.log(e.target.value);
-    // setSelectedCity(e.target.value);
     setValues({ ...values, city: e.target.value });
   };
   const onSubmit = () => {
@@ -183,27 +196,29 @@ const EditProfile = ({
       state: values.state,
       city: values.city,
       pin_code: values.pincode,
+      profile_image: base64Img,
     };
-    if (openFormValue === false) {
+    if (openFormValue === false && editMember === false) {
       delete userData.emergency_mobile_number;
       addMember(userData).then((res) => {
-        console.log(res);
         if (res) {
           addNewMember();
-          getMember().then((res) => {
-            console.log(res);
-          });
+        }
+      });
+    } else if (editMember === true) {
+      updateMember(memberData.id).then((res) => {
+        if (res) {
+          addNewMember();
         }
       });
     } else {
       updateProfile(userData).then((res) => {
-        console.log(res.data);
         viewProfile();
         closeEditProfile();
       });
     }
   };
-
+  console.log(values.profileImage);
   return (
     <Box display={"flex"} alignItems={"center"} justifyContent={"center"}>
       <Box
@@ -213,7 +228,11 @@ const EditProfile = ({
       >
         <Paper elevation={3} sx={{ padding: "20px" }}>
           <Typography fontSize={"36px"} fontWeight={"600"} color={"#101828"}>
-            {openFormValue === true ? "Edit Profile" : "Add New Member"}
+            {openFormValue === true
+              ? "Edit Profile"
+              : editMember === true
+              ? "Edit Member Details"
+              : "Add New Member "}
           </Typography>
           <Divider />
           {openFormValue && (
@@ -226,10 +245,9 @@ const EditProfile = ({
               <Box position={"relative"}>
                 <img
                   src={
-                    values.profileImage
-                      ? `${imgUrl}${values.profileImage}`
-                      : profileNotFound
+                    values.profileImage ? values.profileImage : profileNotFound
                   }
+                  // src={values.profileImage}
                   width={"150px"}
                   height={"150px"}
                   style={{ borderRadius: "12px", objectFit: "fill" }}
@@ -238,9 +256,9 @@ const EditProfile = ({
                 <input
                   id="fileInput"
                   type="file"
-                  // ref={fileInputRef}
+                  ref={fileInputRef}
                   style={{ display: "none" }}
-                  // onChange={handleFileSelect}
+                  onChange={handleFileSelect}
                 />
                 <label htmlFor="fileInput">
                   <EditIcon

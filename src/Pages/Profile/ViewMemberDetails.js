@@ -135,6 +135,7 @@ const ViewMemberDetails = ({
         >
           <Button
             variant="outlined"
+            disableTouchRipple
             onClick={handleDeleteMember}
             sx={{ borderRadius: "40px", padding: "10px 10px", flexGrow: 1 }}
           >
@@ -142,6 +143,7 @@ const ViewMemberDetails = ({
           </Button>
           <Button
             variant="contained"
+            disableTouchRipple
             onClick={editMember}
             sx={{ borderRadius: "40px", padding: "10px 10px", flexGrow: 1 }}
           >
