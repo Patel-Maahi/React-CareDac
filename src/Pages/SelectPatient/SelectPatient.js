@@ -17,21 +17,28 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import AvatarImg from "../../Assets/Images/Avatar.png";
 import FemaleIcon from "@mui/icons-material/Female";
+import MaleIcon from "@mui/icons-material/Male";
 import { getMember } from "../../api/Services/patient/member";
 import { getAvailability } from "../../api/Services/patient/booking";
 import dayjs from "dayjs";
 import { ToastContainer, toast } from "react-toastify";
+import profileNotFound from "../../Assets/Images/profile-blank.jpg";
+import { checkUnavailability } from "../../api/Services/patient/caregiver";
 
 const SelectPatient = ({ closeSelectPatient, id, caregiverDetails }) => {
   const date = new Date().toLocaleDateString();
-  const [btnVariant, setBtnVariant] = useState("");
-  // const [btnIndex, setBtnIndex] = useState("");
+  const imgUrl = "https://caredac-web.s3.ap-southeast-2.amazonaws.com";
+  const [btnIndex, setBtnIndex] = useState([]);
   const [availableTimeSlots, setAvailableTimeSlots] = useState([]);
+  const [bookingSlots, setBookingSlots] = useState([]);
+  const [members, setMembers] = useState([]);
   const [newDate, setNewDate] = useState(date);
+  const [startDate, setStartDate] = useState({});
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     getMember().then((res) => {
-      console.log(res);
+      setMembers(res.data);
     });
     getAvailability(id, newDate).then((res) => {
       console.log(res.data.slot);
@@ -44,17 +51,18 @@ const SelectPatient = ({ closeSelectPatient, id, caregiverDetails }) => {
         });
         return { time: time, availability: item.availability };
       });
-      console.log(newTimeSlots);
       setAvailableTimeSlots([...newTimeSlots]);
-      toast.error(res.message, {
-        position: "bottom-center",
-        autoClose: 2000,
-        hideProgressBar: true,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-      });
+      if (!availableSlots?.length > 0) {
+        toast.error(res.message, {
+          position: "bottom-center",
+          autoClose: 1000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      }
     });
   }, []);
 
@@ -62,13 +70,22 @@ const SelectPatient = ({ closeSelectPatient, id, caregiverDetails }) => {
   const handleClose = () => {
     closeSelectPatient();
   };
-  const handleVariantChange = (index) => {
-    setBtnVariant((prev) => (prev === index ? null : index));
+  const handleVariantChange = (index, e) => {
+    setBtnIndex((prev) => {
+      if (prev.includes(index)) {
+        return prev.filter((item) => item !== index);
+      } else {
+        return [...prev, index];
+      }
+    });
+    console.log(e.target.value);
+    setStartDate(availableTimeSlots[btnIndex[0]], newDate);
+    setEndDate(availableTimeSlots[btnIndex[btnIndex.length - 1]]);
   };
-  console.log(btnVariant);
+
   const handleDateChange = (date) => {
-    const formattedDate = dayjs(date).format("YYYY-MM-DD"); // Format the date to 'YYYY-MM-DD' format
-    console.log(formattedDate);
+    const formattedDate = dayjs(date).format("YYYY-MM-DD");
+
     setNewDate(formattedDate);
     getAvailability(id, newDate).then((res) => {
       const availableSlots = res.data.slot;
@@ -80,21 +97,57 @@ const SelectPatient = ({ closeSelectPatient, id, caregiverDetails }) => {
         });
         return { time: time, availability: item.availability };
       });
-      console.log(newTimeSlots);
-
       setAvailableTimeSlots([...newTimeSlots]);
-      toast.error(res.message, {
+      if (!availableSlots?.length > 0) {
+        toast.error(res.message, {
+          position: "bottom-center",
+          autoClose: 1000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      }
+    });
+  };
+  const handleBookSlot = () => {
+    if (!availableTimeSlots?.length > 0) {
+      toast.error("Slot duration must be atleast 1 hour", {
         position: "bottom-center",
-        autoClose: 2000,
+        autoClose: 1000,
         hideProgressBar: true,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
       });
-    });
+    } else {
+      if (btnIndex.length <= 2) {
+        toast.error("Slot duration must be atleast 1 hour", {
+          position: "bottom-center",
+          autoClose: 1000,
+          hideProgressBar: true,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else {
+        const unavailabilityData = {
+          startTime: newDate + " " + startDate.time,
+          endTime: newDate + " " + endDate.time,
+          bookingDate: newDate,
+          id: id,
+        };
+        checkUnavailability(unavailabilityData);
+      }
+      console.log(startDate);
+      console.log(endDate);
+
+      // console.log(unavailabilityData);
+    }
   };
-  console.log(availableTimeSlots);
 
   return (
     <>
@@ -127,8 +180,18 @@ const SelectPatient = ({ closeSelectPatient, id, caregiverDetails }) => {
             <Box>
               <CardMedia
                 component="img"
-                sx={{ width: "65px" }}
-                image={ProfileImg}
+                sx={{
+                  width: "80px",
+                  height: "80px",
+                  objectFit: "fill",
+                  border: "3px solid rgb(252, 145, 85)",
+                  borderRadius: "20px",
+                }}
+                image={
+                  caregiverDetails.profile_image
+                    ? `${imgUrl}${caregiverDetails.profile_image}`
+                    : profileNotFound
+                }
                 alt="Caregiver Profile Image"
               />
             </Box>
@@ -187,6 +250,62 @@ const SelectPatient = ({ closeSelectPatient, id, caregiverDetails }) => {
           >
             Select Family Member
           </Typography>
+          <Box marginTop={2}>
+            {members.map((item) => (
+              <Card sx={{ marginTop: "20px" }}>
+                <Stack direction={"row"} alignItems={"center"} marginLeft={2}>
+                  <Box>
+                    <CardMedia
+                      image={AvatarImg}
+                      component="img"
+                      sx={{ width: "32px", borderRadius: "50px" }}
+                    />
+                  </Box>
+                  <Box flexGrow={1}>
+                    <CardContent>
+                      <Stack
+                        direction={"row"}
+                        alignItems={"center"}
+                        justifyContent={"space-between"}
+                      >
+                        <Box>
+                          <Typography
+                            fontSize={"16px"}
+                            fontWeight={"500"}
+                            color={"#101828"}
+                          >
+                            {item.full_name}
+                          </Typography>
+                          <Typography
+                            fontWeight={"400"}
+                            fontSize={"14px"}
+                            color={"#101828"}
+                          >
+                            {item.age}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography
+                            color={"#667085"}
+                            fontSize={"14px"}
+                            fontWeight={"400"}
+                          >
+                            {item.gender === "female" ? (
+                              <FemaleIcon />
+                            ) : (
+                              <MaleIcon />
+                            )}
+
+                            {item.gender}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </CardContent>
+                  </Box>
+                </Stack>
+              </Card>
+            ))}
+          </Box>
         </Box>
         <Box
           marginTop={4}
@@ -234,233 +353,42 @@ const SelectPatient = ({ closeSelectPatient, id, caregiverDetails }) => {
             {availableTimeSlots?.map((item, index) => (
               <Button
                 key={index}
-                variant={btnVariant === index ? "contained" : "outlined"}
+                variant={btnIndex.includes(index) ? "contained" : "outlined"}
                 sx={{
                   marginX: "8px",
                   marginY: "5px",
                   backgroundColor: item.availability === false ? "gray" : "",
+                  cursor:
+                    item.availability === false ? "not-allowed" : "pointer",
                   border: "1px solid #101828",
                   borderRadius: "5px",
                   color: "#101828",
+                  color: item.availability === false ? "black" : "#101828",
                   boxShadow: "2px 2px 15px 0px #0000000D",
                   padding: {
                     xs: "6px 50px",
                     md: "6px 30px",
                   },
-                  "&:disabled": {
-                    color: "#6c757d", // Disabled text color
-                    backgroundColor: "#e9ecef", // Disabled background color
-                  },
+                  // "&:disabled": {
+                  //   color: "#6c757d",
+                  //   backgroundColor: "#e9ecef",
+                  //   cursor: "not-allowed",
+                  // },
                 }}
-                // disabled={item.availability === false}
-                onClick={() => handleVariantChange(index)}
+                disabled={item.availability === false}
+                onClick={(e) => handleVariantChange(index, e)}
                 type="button"
                 disableTouchRipple
+                value={item.time}
               >
                 {item.time}
               </Button>
             ))}
           </Box>
         </Box>
-        <Box marginTop={5}>
-          <Card>
-            <Stack direction={"row"} alignItems={"center"} marginLeft={2}>
-              <Box>
-                <CardMedia
-                  image={AvatarImg}
-                  component="img"
-                  sx={{ width: "32px", borderRadius: "50px" }}
-                />
-              </Box>
-              <Box flexGrow={1}>
-                <CardContent>
-                  <Stack
-                    direction={"row"}
-                    alignItems={"center"}
-                    justifyContent={"space-between"}
-                  >
-                    <Box>
-                      <Typography
-                        fontSize={"16px"}
-                        fontWeight={"500"}
-                        color={"#101828"}
-                      >
-                        Olivia Rhye
-                      </Typography>
-                      <Typography
-                        fontWeight={"400"}
-                        fontSize={"14px"}
-                        color={"#101828"}
-                      >
-                        21 years
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography
-                        color={"#667085"}
-                        fontSize={"14px"}
-                        fontWeight={"400"}
-                      >
-                        <FemaleIcon />
-                        Female
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </CardContent>
-              </Box>
-            </Stack>
-          </Card>
-          <Card sx={{ marginTop: "20px" }}>
-            <Stack direction={"row"} alignItems={"center"} marginLeft={2}>
-              <Box>
-                <CardMedia
-                  image={AvatarImg}
-                  component="img"
-                  sx={{ width: "32px", borderRadius: "50px" }}
-                />
-              </Box>
-              <Box flexGrow={1}>
-                <CardContent>
-                  <Stack
-                    direction={"row"}
-                    alignItems={"center"}
-                    justifyContent={"space-between"}
-                  >
-                    <Box>
-                      <Typography
-                        fontSize={"16px"}
-                        fontWeight={"500"}
-                        color={"#101828"}
-                      >
-                        Olivia Rhye
-                      </Typography>
-                      <Typography
-                        fontWeight={"400"}
-                        fontSize={"14px"}
-                        color={"#101828"}
-                      >
-                        21 years
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography
-                        color={"#667085"}
-                        fontSize={"14px"}
-                        fontWeight={"400"}
-                      >
-                        <FemaleIcon />
-                        Female
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </CardContent>
-              </Box>
-            </Stack>
-          </Card>
-          <Card sx={{ marginTop: "20px" }}>
-            <Stack direction={"row"} alignItems={"center"} marginLeft={2}>
-              <Box>
-                <CardMedia
-                  image={AvatarImg}
-                  component="img"
-                  sx={{ width: "32px", borderRadius: "50px" }}
-                />
-              </Box>
-              <Box flexGrow={1}>
-                <CardContent>
-                  <Stack
-                    direction={"row"}
-                    alignItems={"center"}
-                    justifyContent={"space-between"}
-                  >
-                    <Box>
-                      <Typography
-                        fontSize={"16px"}
-                        fontWeight={"500"}
-                        color={"#101828"}
-                      >
-                        Olivia Rhye
-                      </Typography>
-                      <Typography
-                        fontWeight={"400"}
-                        fontSize={"14px"}
-                        color={"#101828"}
-                      >
-                        21 years
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography
-                        color={"#667085"}
-                        fontSize={"14px"}
-                        fontWeight={"400"}
-                      >
-                        <FemaleIcon />
-                        Female
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </CardContent>
-              </Box>
-            </Stack>
-          </Card>
-          <Card sx={{ marginTop: "20px" }}>
-            <Stack direction={"row"} alignItems={"center"} marginLeft={2}>
-              <Box>
-                <CardMedia
-                  image={AvatarImg}
-                  component="img"
-                  sx={{ width: "32px", borderRadius: "50px" }}
-                />
-              </Box>
-              <Box flexGrow={1}>
-                <CardContent>
-                  <Stack
-                    direction={"row"}
-                    alignItems={"center"}
-                    justifyContent={"space-between"}
-                  >
-                    <Box>
-                      <Typography
-                        fontSize={"16px"}
-                        fontWeight={"500"}
-                        color={"#101828"}
-                      >
-                        Olivia Rhye
-                      </Typography>
-                      <Typography
-                        fontWeight={"400"}
-                        fontSize={"14px"}
-                        color={"#101828"}
-                      >
-                        21 years
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography
-                        color={"#667085"}
-                        fontSize={"14px"}
-                        fontWeight={"400"}
-                      >
-                        <FemaleIcon />
-                        Female
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </CardContent>
-              </Box>
-            </Stack>
-          </Card>
-        </Box>
+
         <Box marginTop={3}>
-          <Typography
-            variant="h6"
-            sx={{ color: "#024FAA", textAlign: "center" }}
-          >
-            Add new Patient{" "}
-          </Typography>
-          <Box marginTop={2} textAlign={"center"}>
-            <Button
+          {/* <Button
               variant="outlined"
               sx={{ padding: "15px 60px", borderRadius: "40px" }}
               onClick={handleClose}
@@ -476,10 +404,23 @@ const SelectPatient = ({ closeSelectPatient, id, caregiverDetails }) => {
               }}
             >
               Book
-            </Button>
-          </Box>
+            </Button> */}
+          <Button
+            variant="contained"
+            sx={{
+              padding: "15px 70px",
+              borderRadius: "40px",
+              // marginLeft: "20px",
+              textTransform: "none",
+            }}
+            fullWidth
+            onClick={handleBookSlot}
+          >
+            Continue
+          </Button>
         </Box>
       </Box>
+
       <ToastContainer />
     </>
   );

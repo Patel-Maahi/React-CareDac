@@ -40,7 +40,7 @@ import profileNotFound from "../../Assets/Images/profile-blank.jpg";
 const EditProfile = ({
   closeEditProfile,
   profileData,
-  viewProfile,
+  getProfileData,
   openFormValue,
   addNewMember,
   editMember,
@@ -53,8 +53,8 @@ const EditProfile = ({
   const [selectedState, setSelectedState] = useState(null);
   const [cities, setCities] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
-  // const [uploadImage, setUploadImage] = useState();
-  const [base64Img, setBase64Img] = useState("");
+  const [uploadImage, setUploadImage] = useState("");
+  // const [base64Img, setBase64Img] = useState("");
   const [values, setValues] = useState({
     fullName: "",
     email: "",
@@ -120,7 +120,8 @@ const EditProfile = ({
           state: profileData?.state,
           city: profileData?.city,
           pincode: profileData?.pin_code,
-          profileImage: imgUrl + profileData?.profile_image,
+          // profileImage: imgUrl + profileData?.profile_image,
+          profileImage: profileData?.profile_image,
         });
       } else {
         setValues({
@@ -153,15 +154,18 @@ const EditProfile = ({
     const selectedFile = event.target.files[0];
     console.log(selectedFile);
     setValues({ ...values, profileImage: URL.createObjectURL(selectedFile) });
-    const reader = new FileReader();
-    reader.readAsDataURL(selectedFile);
-    reader.onload = () => {
-      setBase64Img(reader.result);
-    };
+    // setValues({ ...values, profileImage: selectedFile });
+    // const reader = new FileReader();
+    // reader.readAsDataURL(selectedFile);
+    // reader.onload = () => {
+    //   setBase64Img(reader.result);
+    // };
+
     fileInputRef.current.value = null;
   };
   // console.log(uploadImage);
-  console.log(base64Img);
+  // console.log(base64Img);
+  console.log(uploadImage);
   const handleSelectCountries = (e) => {
     const country = e.target.value;
     setSelectedCountry(country);
@@ -196,25 +200,34 @@ const EditProfile = ({
       state: values.state,
       city: values.city,
       pin_code: values.pincode,
-      profile_image: base64Img,
+      profile_image: values.profileImage,
+      // profile_image: uploadImage,
     };
     if (openFormValue === false && editMember === false) {
       delete userData.emergency_mobile_number;
+      delete userData.profile_image;
+      //adding member
       addMember(userData).then((res) => {
         if (res) {
           addNewMember();
+          closeEditProfile();
         }
       });
     } else if (editMember === true) {
-      updateMember(memberData.id).then((res) => {
+      //updating member details
+      updateMember(memberData.id, userData).then((res) => {
         if (res) {
           addNewMember();
+          closeEditProfile();
         }
       });
     } else {
+      //updating user profile
       updateProfile(userData).then((res) => {
-        viewProfile();
-        closeEditProfile();
+        if (res) {
+          getProfileData();
+          closeEditProfile();
+        }
       });
     }
   };
@@ -638,6 +651,7 @@ const EditProfile = ({
                     textTransform: "none",
                     marginLeft: "10px",
                   }}
+                  disableTouchRipple
                 >
                   Save
                 </Button>

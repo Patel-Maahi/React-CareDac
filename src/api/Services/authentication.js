@@ -61,3 +61,16 @@ export const forgotPasswordLink = async (userData) => {
     return error.response.data;
   }
 };
+
+//Change Password
+export const changePassword = async (userData) => {
+  try {
+    const response = await axiosInstance.patch(
+      "/api/v1/auth/change-password",
+      userData
+    );
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};

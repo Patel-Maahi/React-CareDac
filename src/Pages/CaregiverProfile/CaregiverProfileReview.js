@@ -1,7 +1,7 @@
 import React from "react";
 import { Typography, Box } from "@mui/material";
 
-const CaregiverProfileReview = () => {
+const CaregiverProfileReview = ({ feedback }) => {
   return (
     <>
       <Box
@@ -21,7 +21,9 @@ const CaregiverProfileReview = () => {
           gutterBottom
         >
           Reviewed by{" "}
-          <span style={{ color: "#101828", fontWeight: "600" }}>Kim A.</span>
+          <span style={{ color: "#101828", fontWeight: "600" }}>
+            {feedback.reviewed_by}
+          </span>
         </Typography>
         <Typography
           sx={{
@@ -30,8 +32,7 @@ const CaregiverProfileReview = () => {
             fontWeight: "400",
           }}
         >
-          Donec dictum tristique porta. Etiam convallis lorem lobortis nulla
-          molestie, nec tincidunt ex ullamcorper..
+          {feedback.comments}
         </Typography>
       </Box>
     </>

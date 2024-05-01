@@ -34,9 +34,23 @@ import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import { ToastContainer, toast } from "react-toastify";
 import { viewProfile } from "../../api/Services/patient/profile";
+import Modal from "@mui/material/Modal";
+import ChangePassword from "../../Pages/Authentication/ChangePassword/ChangePassword";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
+
+const style = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  borderRadius: "8px",
+  bgcolor: "background.paper",
+  boxShadow: 24,
+  maxHeight: "90vh",
+  overflowY: "auto",
+};
 
 export const Home = () => {
   const [caregiverList, setCaregiverList] = useState();
@@ -47,7 +61,6 @@ export const Home = () => {
   const [filterDataGenders, setFilterDataGenders] = useState();
   const [filterDataService, setFilterDataService] = useState();
   const [filterDataLanguages, setFilterDataLanguages] = useState();
-
   const [workerRoleValue, setWorkerRoleValue] = useState("all");
   const [locationValue, setLocationValue] = useState([]);
   const [ratingsSelected, setRatingsSelected] = useState({
@@ -69,6 +82,7 @@ export const Home = () => {
   const [conditionValue, setConditionValue] = useState([]);
   const [languageValue, setLanguageValue] = useState([]);
   const [userProfile, setUserProfile] = useState({});
+  const [openChangePassword, setOpenChangePassword] = useState(false);
 
   const filters = {
     page: 1,
@@ -231,9 +245,20 @@ export const Home = () => {
     setLanguageValue(value);
   };
 
+  const handleOpenChangePassword = () => {
+    setOpenChangePassword(true);
+  };
+
+  const handleCloseChangePassword = () => {
+    setOpenChangePassword(false);
+  };
+
   return (
     <>
-      <Navbar profile={userProfile} />
+      <Navbar
+        profile={userProfile}
+        openChangePassword={handleOpenChangePassword}
+      />
       <Box sx={{ maxHeight: "100vh", overflow: "auto" }}>
         <CssBaseline />
         <Grid
@@ -545,7 +570,13 @@ export const Home = () => {
                       >
                         Experience
                       </Typography>
-                      <Box sx={{ width: 300 }}>
+                      <Box
+                        sx={{
+                          maxWidth: {
+                            md: 300,
+                          },
+                        }}
+                      >
                         <Slider
                           getAriaLabel={() => "Temperature range"}
                           value={experienceValue}
@@ -696,6 +727,16 @@ export const Home = () => {
         </Grid>
       </Box>
       <ToastContainer />
+      <Modal
+        open={openChangePassword}
+        onClose={handleCloseChangePassword}
+        aria-labelledby="modal-modal-title"
+        aria-describedby="modal-modal-description"
+      >
+        <Box sx={style}>
+          <ChangePassword />
+        </Box>
+      </Modal>
     </>
   );
 };

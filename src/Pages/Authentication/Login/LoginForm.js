@@ -39,17 +39,13 @@ export const LoginForm = () => {
   const navigate = useNavigate();
   const onSubmit = (data) => {
     userLogin(data).then((res) => {
-      console.log(res.data);
-      console.log(res);
       if (res.status === "success") {
-        console.log("success");
         toast.success(res.message);
         navigate("/home");
       } else {
-        console.log("error");
-        console.log(res.message);
         toast.error(res.message, {
-          position: toast.POSITION?.TOP_RIGHT,
+          // position: toast.POSITION?.TOP_RIGHT,
+          position: "bottom-center",
           autoClose: 2000,
           hideProgressBar: true,
           closeOnClick: true,
@@ -93,7 +89,7 @@ export const LoginForm = () => {
             {...register("password")}
           />
           {showPassword ? (
-            <VisibilityOffIcon
+            <VisibilityIcon
               sx={{
                 position: "absolute",
                 right: "10px",
@@ -103,7 +99,7 @@ export const LoginForm = () => {
               onClick={togglePasswordVisibility}
             />
           ) : (
-            <VisibilityIcon
+            <VisibilityOffIcon
               sx={{
                 position: "absolute",
                 right: "10px",

@@ -30,9 +30,12 @@ export const getMemberDetails = async (id) => {
   }
 };
 
-export const updateMember = async (id) => {
+export const updateMember = async (id, userData) => {
   try {
-    const response = await axiosInstance.patch(`/api/v1/patient/member/${id}`);
+    const response = await axiosInstance.patch(
+      `/api/v1/patient/member/${id}`,
+      userData
+    );
     return response.data;
   } catch (error) {
     return error.response.data;

@@ -2,8 +2,6 @@ import React from "react";
 import { Route, Routes } from "react-router-dom";
 import { Home } from "../Pages/Home/Home";
 import CaregiverProfile from "../Pages/CaregiverProfile/CaregiverProfile";
-import { Navbar } from "../Components/Navbar/Navbar";
-import SelectPatient from "../Pages/SelectPatient/SelectPatient";
 import Bookings from "../Pages/Bookings/Bookings";
 import PreviousBookingDetails from "../Pages/PreviousBookingDetails/PreviousBookingDetails";
 import CurrentBookingDetails from "../Pages/CurrentBookingDetails/CurrentBookingDetails";
@@ -21,7 +19,6 @@ import { SelectLanguage } from "../Pages/Authentication/SelectLanguage/SelectLan
 import { RegisterServiceNeeded } from "../Pages/Authentication/RegisterServiceNeeded/RegisterServiceNeeded";
 import { RegisterPatientDetails } from "../Pages/Authentication/RegisterPatientDetails/RegisterPatientDetails";
 import ProtectedRoute from "./ProtectedRoute";
-import EditProfile from "../Pages/Profile/EditProfile";
 
 export const AppRoutes = () => {
   return (

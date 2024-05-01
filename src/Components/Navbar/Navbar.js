@@ -15,20 +15,18 @@ import {
 } from "@mui/material";
 import careDacLogo from "../../Assets/Images/cardac-logo 1.png";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import KeyboardArrowDownSharpIcon from "@mui/icons-material/KeyboardArrowDownSharp";
 import languageImg from "../../Assets/Images/language-square.svg";
-import SearchIcon from "@mui/icons-material/Search";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import { viewProfile } from "../../api/Services/patient/profile";
+import { NavLink, useNavigate } from "react-router-dom";
 import { removeToken } from "../../api/auth";
 import MenuIcon from "@mui/icons-material/Menu";
 import DrawerComp from "./DrawerComp";
 
-export const Navbar = ({ profile }) => {
+export const Navbar = ({ profile, openChangePassword }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
   const toggleDrawer = () => {
     setDrawerOpen(!drawerOpen);
   };
@@ -56,6 +54,12 @@ export const Navbar = ({ profile }) => {
     removeToken();
     navigate("/");
   };
+
+  const handleOpenChangePassword = () => {
+    openChangePassword();
+    setAnchorEl(null);
+  };
+
   return (
     <>
       <AppBar
@@ -246,7 +250,9 @@ export const Navbar = ({ profile }) => {
                   onClose={handleMenuClose}
                 >
                   <MenuItem onClick={handleProfileOpen}>Profile</MenuItem>
-                  <MenuItem onClick={handleMenuClose}>Change Password</MenuItem>
+                  <MenuItem onClick={handleOpenChangePassword}>
+                    Change Password
+                  </MenuItem>
                   <MenuItem onClick={handleLogOut}>Log Out</MenuItem>
                   <MenuItem onClick={handleDeleteAccount} sx={{ color: "red" }}>
                     Delete Account

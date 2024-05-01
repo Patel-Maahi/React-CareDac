@@ -13,26 +13,21 @@ export const RegisterServiceNeeded = ({
   modalValue,
   closeServiceNeeded,
   servicesList,
+  getAddedServices,
 }) => {
   const [services, setServices] = useState([]);
-  const [serviceList, setServiceList] = useState(servicesList);
-  const [serviceAdded, setServiceAdded] = useState([]);
-  const [newServiceAdded, setNewServiceAdded] = useState(serviceAdded);
+  const [allServiceList, setAllServiceList] = useState(servicesList);
   const [errorMsg, setErrorMsg] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // setServiceList(servicesList);
-    console.log(newServiceAdded);
-    console.log(serviceAdded);
-    console.log(serviceList);
-    const updatedServiceList = serviceList.map((item) => {
-      const checkService = newServiceAdded.find(
-        (service) => service.services === item.services
-      );
-      return checkService ? { ...item, checked: true } : item;
+    const checkedItems = servicesList.filter((item) => item.checked === true);
+    const servicesArray = checkedItems.map((item) => item.services);
+    setServices((prevServices) => [...prevServices, ...servicesArray]);
+
+    viewAllServices().then((res) => {
+      setAllServiceList(res.data);
     });
-    setServiceList(updatedServiceList);
   }, []);
 
   const handleSubmit = (e) => {
@@ -54,38 +49,15 @@ export const RegisterServiceNeeded = ({
       } else {
         updateService(serviceData).then((res) => {
           if (res) {
-            viewServices().then((res) => {
-              const addedServices = res.data;
-              // setServiceAdded(addedServices);
-
-              // setNewServiceAdded(serviceAdded);
-              setServiceAdded((prev) => {
-                const filteredServices = res.data.filter(
-                  (service) =>
-                    !prev.some(
-                      (existingService) =>
-                        existingService.services === service.services
-                    )
-                );
-                return prev.concat(filteredServices);
-              });
-              const updatedServiceList = serviceList.map((item) => {
-                const checkService = newServiceAdded.find(
-                  (service) => service.services === item.services
-                );
-                return checkService ? { ...item, checked: true } : item;
-              });
-              setServiceList(updatedServiceList);
-            });
+            getAddedServices();
+            closeServiceNeeded();
           }
         });
       }
       setErrorMsg(false);
     }
   };
-  console.log(newServiceAdded);
-  console.log(serviceAdded);
-  console.log(serviceList);
+
   const handleChange = (e) => {
     const { checked, value } = e.target;
     if (checked) {
@@ -127,7 +99,7 @@ export const RegisterServiceNeeded = ({
             <form style={{ maxWidth: "450px" }} onSubmit={handleSubmit}>
               {modalValue ? (
                 <div>
-                  {serviceList.map((item) => (
+                  {allServiceList.map((item) => (
                     <div className="mt-2">
                       <input
                         type="checkbox"
@@ -303,7 +275,7 @@ export const RegisterServiceNeeded = ({
                   </Button>
                 </div>
               ) : (
-                <div className="mt-3">
+                <div className="mt-3 d-flex justify-content-center align-items-center">
                   <Button
                     variant="outlined"
                     onClick={closeServiceNeeded}
@@ -314,7 +286,11 @@ export const RegisterServiceNeeded = ({
                   <Button
                     type="submit"
                     variant="contained"
-                    sx={{ padding: "10px 70px", borderRadius: "40px" }}
+                    sx={{
+                      padding: "10px 70px",
+                      borderRadius: "40px",
+                      marginLeft: "10px",
+                    }}
                   >
                     Add
                   </Button>

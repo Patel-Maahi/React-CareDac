@@ -24,7 +24,6 @@ const ProfileCard = ({ caregiverData }) => {
     const caregiverId = caregiverData.id;
     navigate(`/caregiver-profile/${caregiverId}`);
   };
-  console.log(caregiverData.profile_image);
 
   return (
     <>

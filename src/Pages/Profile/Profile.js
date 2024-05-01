@@ -25,8 +25,12 @@ import { RegisterServiceNeeded } from "../Authentication/RegisterServiceNeeded/R
 import { viewProfile } from "../../api/Services/patient/profile";
 import { getCondition } from "../../api/Services/patient/condition";
 import { getSpecialNeeds } from "../../api/Services/patient/specialNeeds";
+import HomeIcon from "@mui/icons-material/Home";
 import { getMember } from "../../api/Services/patient/member";
-import { viewAllServices } from "../../api/Services/patient/services";
+import {
+  viewAllServices,
+  viewServices,
+} from "../../api/Services/patient/services";
 import ViewMemberDetails from "./ViewMemberDetails";
 
 const style = {
@@ -48,15 +52,16 @@ const Profile = () => {
   const [modalValue, setModalValue] = useState();
   const [openServiceNeeded, setOpenServiceNeeded] = useState(false);
   const [openViewMemberDetails, setOpenViewMemberDetails] = useState(false);
-  // const [profileImg, setProfileImg] = useState(ProfileImg2);
   const [profileData, setProfileData] = useState();
   const [conditionList, setConditionList] = useState([]);
   const [specialNeedsList, setSpecialNeedsList] = useState([]);
   const [servicesList, setServicesList] = useState([]);
+  const [newServices, setNewServices] = useState([]);
   const [members, setMembers] = useState([]);
   const [memberData, setMemberData] = useState([]);
   const [editMember, setEditMember] = useState(false);
   const [openFormValue, setOpenFormValue] = useState(true);
+  const [initials, setInitials] = useState([]);
 
   const handleOpenEditProfile = () => {
     setOpenFormValue(true);
@@ -102,11 +107,23 @@ const Profile = () => {
     });
   };
 
+  const getProfileData = () => {
+    viewProfile().then((res) => {
+      setProfileData(res.data);
+    });
+  };
+  const getAddedServices = () => {
+    viewServices().then((res) => {
+      setNewServices(res.data);
+    });
+    console.log(newServices);
+  };
+
   useEffect(() => {
     viewProfile().then((res) => {
       setProfileData(res.data);
-      // setProfileImg(res.data.profile_image);
     });
+
     getCondition().then((res) => {
       const conditionData = res.data;
       setConditionList(conditionData);
@@ -116,19 +133,44 @@ const Profile = () => {
       setSpecialNeedsList(specialNeedsData);
     });
     getMember().then((res) => {
-      setMembers(res.data);
+      // setMembers(res.data);
+      const membersArray = res.data;
+
+      const membersWithInitials = membersArray.map((item) => {
+        const fullName = item.full_name;
+        const [firstname, lastname] = fullName.split(" ");
+        const firstInitial = firstname.charAt(0).toUpperCase();
+        const lastInitial = lastname.charAt(0).toUpperCase();
+        const initials = firstInitial + lastInitial;
+        return { ...item, initials: initials };
+      });
+      setMembers(membersWithInitials);
     });
-    viewAllServices().then((res) => {
-      setServicesList(res.data);
+
+    viewServices().then((res) => {
+      setNewServices(res.data);
+      // setNewServices((prev) => [...prev, res.data]);
     });
-    // const updatedServiceList = serviceList.map((item) => {
-    //   const checkService = serviceAdded.find(
-    //     (service) => service.services === item.services
-    //   );
-    //   return checkService ? { ...item, checked: true } : item;
-    // });
-    // setServicesList(updatedServiceList);
   }, []);
+
+  useEffect(() => {
+    viewAllServices().then((res) => {
+      const serviceList = res.data;
+      const updatedServiceList = serviceList.map((item1) => {
+        const foundItem = newServices.find(
+          (item2) => item2.services === item1.services
+        );
+        if (foundItem) {
+          return { ...item1, checked: true };
+        } else {
+          return item1;
+        }
+      });
+
+      setServicesList(updatedServiceList);
+    });
+  }, [newServices]);
+  console.log(servicesList);
 
   const handleAddMember = () => {
     setOpenFormValue(false);
@@ -140,6 +182,7 @@ const Profile = () => {
     setOpenEditProfile(true);
     setEditMember(true);
   };
+
   return (
     <>
       <Navbar />
@@ -170,6 +213,7 @@ const Profile = () => {
                 <CardMedia
                   component={"img"}
                   image={`${imgUrl}${profileData?.profile_image}`}
+                  // image={profileData?.profile_image}
                   sx={{
                     width: "150px",
                     height: "150px",
@@ -228,11 +272,30 @@ const Profile = () => {
                       fontWeight={"500"}
                     >
                       <CallIcon sx={{ marginRight: "10px" }} />
-                      +91 {profileData?.mobile_number}
+                      <span
+                        style={{
+                          color: "#101828",
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          marginLeft: "10px",
+                        }}
+                      >
+                        +91 {profileData?.mobile_number}
+                      </span>
                       <MailOutlineIcon
                         sx={{ marginRight: "10px", marginLeft: "10px" }}
                       />
-                      {profileData?.email}
+                      <span
+                        style={{
+                          color: "#101828",
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          // marginLeft: "10px",
+                        }}
+                      >
+                        {" "}
+                        {profileData?.email}
+                      </span>
                     </Typography>
                     <Typography
                       gutterBottom
@@ -260,8 +323,17 @@ const Profile = () => {
                       fontWeight={"500"}
                     >
                       <CallIcon sx={{ marginRight: "10px" }} />
-                      Emergency contact +91{" "}
-                      {profileData?.emergency_mobile_number}
+                      Emergency contact
+                      <span
+                        style={{
+                          color: "#101828",
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          marginLeft: "10px",
+                        }}
+                      >
+                        +91 {profileData?.emergency_mobile_number}
+                      </span>
                     </Typography>
                     <Typography
                       gutterBottom
@@ -269,7 +341,7 @@ const Profile = () => {
                       color={"#667085"}
                       fontWeight={"500"}
                     >
-                      <CalendarMonthIcon sx={{ marginRight: "10px" }} />
+                      <HomeIcon sx={{ marginRight: "10px" }} />
                       Address{" "}
                       <span
                         style={{
@@ -294,6 +366,8 @@ const Profile = () => {
                           xs: "20px",
                           md: "0px",
                         },
+                        color: "#024FAA",
+                        border: "1px solid #024FAA",
                       }}
                       onClick={handleOpenEditProfile}
                     >
@@ -333,21 +407,38 @@ const Profile = () => {
                   alignItems={"center"}
                   justifyContent={"space-between"}
                 >
-                  <Typography>My Condition</Typography>
+                  <Typography
+                    fontSize={"20px"}
+                    fontWeight={600}
+                    color={"#344054"}
+                  >
+                    My Condition
+                  </Typography>
                   <Button
                     variant="text"
                     onClick={handleOpenMyCondition}
                     value="My Condition"
+                    sx={{
+                      color: "#024FAA",
+                      fontSize: "20px",
+                      fontWeight: 600,
+                      textTransform: "none",
+                    }}
                   >
                     Edit
                   </Button>
                 </Stack>
                 <Stack marginTop={1}>
                   {conditionList.map((item) => (
-                    <Typography gutterBottom>
+                    <Typography
+                      gutterBottom
+                      fontSize={"16px"}
+                      fontWeight={600}
+                      color={"#344054"}
+                    >
                       <TaskAltIcon
                         color="success"
-                        sx={{ marginRight: "10px" }}
+                        sx={{ marginRight: "10px", fontSize: "16px" }}
                       />
                       {item.conditions}
                     </Typography>
@@ -369,11 +460,23 @@ const Profile = () => {
                   alignItems={"center"}
                   justifyContent={"space-between"}
                 >
-                  <Typography>Special Needs</Typography>
+                  <Typography
+                    fontSize={"20px"}
+                    fontWeight={600}
+                    color={"#344054"}
+                  >
+                    Special Needs
+                  </Typography>
                   <Button
                     variant="text"
                     value="Special Needs"
                     onClick={handleOpenMyCondition}
+                    sx={{
+                      color: "#024FAA",
+                      fontSize: "20px",
+                      fontWeight: 600,
+                      textTransform: "none",
+                    }}
                   >
                     Edit
                   </Button>
@@ -382,7 +485,14 @@ const Profile = () => {
                   <ul>
                     {specialNeedsList.map((item) => (
                       <li>
-                        <Typography gutterBottom>{item.needs}</Typography>
+                        <Typography
+                          gutterBottom
+                          fontSize={"16px"}
+                          fontWeight={600}
+                          color={"#667085"}
+                        >
+                          {item.needs}
+                        </Typography>
                       </li>
                     ))}
                   </ul>
@@ -403,30 +513,41 @@ const Profile = () => {
                   alignItems={"center"}
                   justifyContent={"space-between"}
                 >
-                  <Typography>Services I need</Typography>
+                  <Typography
+                    fontSize={"20px"}
+                    fontWeight={600}
+                    color={"#344054"}
+                  >
+                    Services I need
+                  </Typography>
                   <Button
                     variant="text"
                     onClick={handleOpenServiceNeeded}
                     value="true"
+                    sx={{
+                      color: "#024FAA",
+                      fontSize: "20px",
+                      fontWeight: 600,
+                      textTransform: "none",
+                    }}
                   >
                     Edit
                   </Button>
                 </Stack>
                 <Stack marginTop={1}>
                   <ul>
-                    <li>
-                      <Typography gutterBottom>Personals care</Typography>
-                    </li>
-                    <li>
-                      {" "}
-                      <Typography gutterBottom>Domestic Assistance</Typography>
-                    </li>
-                    <li>
-                      {" "}
-                      <Typography gutterBottom>
-                        Out and About Transport
-                      </Typography>
-                    </li>
+                    {newServices.map((item) => (
+                      <li>
+                        <Typography
+                          gutterBottom
+                          fontSize={"16px"}
+                          fontWeight={600}
+                          color={"#667085"}
+                        >
+                          {item.services}
+                        </Typography>
+                      </li>
+                    ))}
                   </ul>
                 </Stack>
               </CardContent>
@@ -464,8 +585,23 @@ const Profile = () => {
                 alignItems={"center"}
                 justifyContent={"space-between"}
               >
-                <Typography>Family Member Details</Typography>
-                <Button variant="text" onClick={handleAddMember}>
+                <Typography
+                  fontSize={"20px"}
+                  fontWeight={600}
+                  color={"#344054"}
+                >
+                  Family Member Details
+                </Typography>
+                <Button
+                  variant="text"
+                  onClick={handleAddMember}
+                  sx={{
+                    color: "#024FAA",
+                    fontSize: "20px",
+                    fontWeight: 600,
+                    textTransform: "none",
+                  }}
+                >
                   Add new member
                 </Button>
               </Stack>
@@ -483,16 +619,23 @@ const Profile = () => {
                         marginBottom: "20px",
                       }}
                     >
-                      <Box>
-                        <CardMedia
-                          component={"img"}
-                          image={AvatarImg}
-                          sx={{
-                            width: "32px",
-                            borderRadius: "50px",
-                            marginLeft: "10px",
-                          }}
-                        />
+                      <Box
+                        bgcolor={"#D1E6FF"}
+                        height={"32px"}
+                        width={"32px"}
+                        borderRadius={"50px"}
+                        display={"flex"}
+                        alignItems={"center"}
+                        justifyContent={"center"}
+                        marginLeft={"10px"}
+                      >
+                        <Typography
+                          color={"#024FAA"}
+                          fontSize={"14px"}
+                          fontWeight={500}
+                        >
+                          {item.initials}
+                        </Typography>
                       </Box>
                       <Box flexGrow={1}>
                         <CardContent
@@ -503,11 +646,23 @@ const Profile = () => {
                           }}
                         >
                           <Stack>
-                            <Typography>{item.full_name}</Typography>
-                            <Typography>{item.age}</Typography>
+                            <Typography
+                              fontSize={"16px"}
+                              fontWeight={500}
+                              color={"#101828"}
+                            >
+                              {item.full_name}
+                            </Typography>
+                            <Typography
+                              fontSize={"14px"}
+                              fontWeight={400}
+                              color={"#101828"}
+                            >
+                              {item.age}
+                            </Typography>
                           </Stack>
                           <Stack>
-                            <Typography>
+                            <Typography fontSize={"14px"} color={"#667085"}>
                               {item.gender === "male" ? (
                                 <MaleIcon />
                               ) : (
@@ -542,8 +697,24 @@ const Profile = () => {
                 alignItems={"center"}
                 justifyContent={"space-between"}
               >
-                <Typography>Payment details</Typography>
-                <Button variant="text">Add new </Button>
+                <Typography
+                  fontSize={"20px"}
+                  fontWeight={600}
+                  color={"#344054"}
+                >
+                  Payment details
+                </Typography>
+                <Button
+                  variant="text"
+                  sx={{
+                    color: "#024FAA",
+                    fontSize: "20px",
+                    fontWeight: 600,
+                    textTransform: "none",
+                  }}
+                >
+                  Add new{" "}
+                </Button>
               </Stack>
               <Stack spacing={2} marginTop={2}>
                 <Card
@@ -552,16 +723,23 @@ const Profile = () => {
                     alignItems: "center",
                   }}
                 >
-                  <Box>
-                    <CardMedia
-                      component={"img"}
-                      image={AvatarImg}
-                      sx={{
-                        width: "32px",
-                        borderRadius: "50px",
-                        marginLeft: "10px",
-                      }}
-                    />
+                  <Box
+                    bgcolor={"#D1E6FF"}
+                    height={"32px"}
+                    width={"32px"}
+                    borderRadius={"50px"}
+                    display={"flex"}
+                    alignItems={"center"}
+                    justifyContent={"center"}
+                    marginLeft={"10px"}
+                  >
+                    <Typography
+                      color={"#024FAA"}
+                      fontSize={"14px"}
+                      fontWeight={500}
+                    >
+                      {initials}
+                    </Typography>
                   </Box>
                   <Box flexGrow={1}>
                     <CardContent
@@ -572,11 +750,29 @@ const Profile = () => {
                       }}
                     >
                       <Stack>
-                        <Typography>Samarth Patel</Typography>
-                        <Typography>1234-XXXX-XXXX-1234</Typography>
+                        <Typography
+                          fontSize={"16px"}
+                          fontWeight={500}
+                          color={"#101828"}
+                        >
+                          Samarth Patel
+                        </Typography>
+                        <Typography
+                          fontSize={"14px"}
+                          fontWeight={400}
+                          color={"#101828"}
+                        >
+                          1234-XXXX-XXXX-1234
+                        </Typography>
                       </Stack>
                       <Stack>
-                        <Typography>12/25</Typography>
+                        <Typography
+                          fontSize={"14px"}
+                          fontWeight={400}
+                          color={"#667085"}
+                        >
+                          12/25
+                        </Typography>
                       </Stack>
                     </CardContent>
                   </Box>
@@ -587,16 +783,23 @@ const Profile = () => {
                     alignItems: "center",
                   }}
                 >
-                  <Box>
-                    <CardMedia
-                      component={"img"}
-                      image={AvatarImg}
-                      sx={{
-                        width: "32px",
-                        borderRadius: "50px",
-                        marginLeft: "10px",
-                      }}
-                    />
+                  <Box
+                    bgcolor={"#D1E6FF"}
+                    height={"32px"}
+                    width={"32px"}
+                    borderRadius={"50px"}
+                    display={"flex"}
+                    alignItems={"center"}
+                    justifyContent={"center"}
+                    marginLeft={"10px"}
+                  >
+                    <Typography
+                      color={"#024FAA"}
+                      fontSize={"14px"}
+                      fontWeight={500}
+                    >
+                      {initials}
+                    </Typography>
                   </Box>
                   <Box flexGrow={1}>
                     <CardContent
@@ -607,11 +810,29 @@ const Profile = () => {
                       }}
                     >
                       <Stack>
-                        <Typography>Samarth Patel </Typography>
-                        <Typography>1234-XXXX-XXXX-1234</Typography>
+                        <Typography
+                          fontSize={"16px"}
+                          fontWeight={500}
+                          color={"#101828"}
+                        >
+                          Samarth Patel{" "}
+                        </Typography>
+                        <Typography
+                          fontSize={"14px"}
+                          fontWeight={400}
+                          color={"#101828"}
+                        >
+                          1234-XXXX-XXXX-1234
+                        </Typography>
                       </Stack>
                       <Stack>
-                        <Typography>12/25</Typography>
+                        <Typography
+                          fontSize={"14px"}
+                          fontWeight={400}
+                          color={"#667085"}
+                        >
+                          12/25
+                        </Typography>
                       </Stack>
                     </CardContent>
                   </Box>
@@ -634,7 +855,7 @@ const Profile = () => {
             <EditProfile
               profileData={profileData}
               closeEditProfile={handleCloseEditProfile}
-              viewProfile={viewProfile}
+              getProfileData={getProfileData}
               openFormValue={openFormValue}
               addNewMember={handleGetAllMembers}
               editMember={editMember}
@@ -673,6 +894,7 @@ const Profile = () => {
               closeServiceNeeded={handleCloseServiceNeeded}
               modalValue={modalValue}
               servicesList={servicesList}
+              getAddedServices={getAddedServices}
             />
           </Box>
         </Modal>

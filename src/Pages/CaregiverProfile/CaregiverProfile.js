@@ -22,7 +22,10 @@ import SelectPatient from "../SelectPatient/SelectPatient";
 import { useState } from "react";
 import CaregiverProfileReview from "./CaregiverProfileReview";
 import { Navbar } from "../../Components/Navbar/Navbar";
-import { getCaregiverDetails } from "../../api/Services/patient/caregiver";
+import {
+  getCaregiverDetails,
+  getFeedback,
+} from "../../api/Services/patient/caregiver";
 import profileNotFound from "../../Assets/Images/profile-blank.jpg";
 
 const style = {
@@ -43,6 +46,7 @@ const CaregiverProfile = () => {
   const [caregiverDetails, setCaregiverDetails] = useState({});
   const [highlights, setHighlights] = useState([]);
   const [canAlsoWith, setCanAlsoWith] = useState([]);
+  const [feedback, setFeedback] = useState([]);
   const handleOpen = () => setOpenModal(true);
   const handleClose = () => setOpenModal(false);
   const { id } = useParams();
@@ -51,6 +55,10 @@ const CaregiverProfile = () => {
       setCaregiverDetails(res.data);
       setHighlights(res.data?.highlight);
       setCanAlsoWith(res.data?.canAlsoWith);
+    });
+    getFeedback(id).then((res) => {
+      console.log(res.data.data.feedback);
+      setFeedback(res.data.data.feedback);
     });
   }, []);
 
@@ -90,7 +98,7 @@ const CaregiverProfile = () => {
                       },
                     }}
                   >
-                    <Box>
+                    <Box display={"flex"} justifyContent={"center"}>
                       <CardMedia
                         component="img"
                         sx={{
@@ -99,6 +107,8 @@ const CaregiverProfile = () => {
                           objectFit: "fill",
                           marginRight: "20px",
                           borderRadius: "12px",
+                          border: "3px solid rgb(252, 145, 85)",
+                          borderRadius: "30px",
                         }}
                         image={
                           caregiverDetails.profile_image
@@ -115,6 +125,10 @@ const CaregiverProfile = () => {
                           fontSize: "14px",
                           fontWeight: "400",
                           color: "#101828",
+                          marginTop: {
+                            xs: "20px",
+                            md: "0px",
+                          },
                         }}
                       >
                         {caregiverDetails?.worker_role}
@@ -411,9 +425,9 @@ const CaregiverProfile = () => {
                     (5)
                   </Typography>
                 </Stack>
-                <CaregiverProfileReview />
-                <CaregiverProfileReview />
-                <CaregiverProfileReview />
+                {feedback?.map((item) => (
+                  <CaregiverProfileReview feedback={item} />
+                ))}
               </CardContent>
             </Card>
             <Stack marginTop={3} direction={"row"} spacing={4}>

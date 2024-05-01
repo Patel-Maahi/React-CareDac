@@ -21,3 +21,24 @@ export const getCaregiverDetails = async (caregiverId) => {
     return error.response.data;
   }
 };
+export const getFeedback = async (caregiverId) => {
+  try {
+    const response = await axiosInstance.get(
+      `/api/v1/patient/feedback/caregiver/${caregiverId}`
+    );
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
+
+export const checkUnavailability = async (unavailabilityData) => {
+  try {
+    const response = await axiosInstance.get(
+      `/api/v1/patient/check-unavailability/${unavailabilityData.id}?booking_date=${unavailabilityData.bookingDate}&start_time=${unavailabilityData.startTime}&end_time=${unavailabilityData.endTime}`
+    );
+    return response.data;
+  } catch (error) {
+    return error.response.data;
+  }
+};
